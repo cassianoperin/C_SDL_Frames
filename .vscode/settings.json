@@ -32,6 +32,7 @@
         "array": "c",
         "initializer_list": "c",
         "string_view": "c",
-        "unordered_map": "c"
+        "unordered_map": "c",
+        "__string": "c"
     }
 }

@@ -25,15 +25,25 @@ int main( int argc, char* args[] )
 	bool quit = false;
 
 	// Timing
-	uint64_t countFreq            = SDL_GetPerformanceFrequency();	// Platform independent frequency
-	uint64_t msPerFrameInt        = msPerFrame * countFreq;				// Time per frame in the deltas format
-	uint64_t timeFrameStartCount  = 0;									// Measurement of time spent on last frame
-	uint64_t timeFrameLastCount   = SDL_GetPerformanceCounter();		// Measurement of time spent on last frame
+	uint64_t perfFrequency        = SDL_GetPerformanceFrequency();		// Platform independent frequency
+	uint64_t msPerFrameInt        = msPerFrame * perfFrequency;			// Time per frame in the deltas format
+	uint64_t timeFrameStartCount  = 0;									// Start of frame counter
+	uint64_t timeFrameLastCount   = SDL_GetPerformanceCounter();		// End of frame counter
 	uint64_t timeFrameDuration    = 0;									// Duration of a frame
 	uint64_t timeFrameDurationSum = 0;									// Sum of all frames into a second
 	uint64_t timeDeltaOperations  = 0;									// Time spent into the operations (part 1)
 	uint64_t timeDeltaSleep       = 0;									// Time spent sleeping (part 2)
 	int      timeFrameSleep       = 0;									// Time in ms to sleep after all frame executions
+	// FPS
+	uint64_t timeSecondStart      = 0;									// Measurement of time spent on last frame
+	uint64_t timeSecondLast       = 0;									// Measurement of time spent on last frame
+
+	// On screen messages
+	// string_msg1 = malloc( length + 30 );
+	string_msg1 = (char *)malloc(sizeof(char) * (30 + 1));
+	string_msg2 = (char *)malloc(sizeof(char) * (9 + 1));
+
+
 
 	// Timing debug
 	bool debug_timing = false;
@@ -44,6 +54,9 @@ int main( int argc, char* args[] )
 
 	// ------------------------- Font Init -------------------------- //
 	font_init(renderer);
+
+	// Seconds Counter
+	timeSecondStart = SDL_GetPerformanceCounter();
 
 	// ----------------------- Infinite Loop  ----------------------- //
 	while( !quit )
@@ -82,12 +95,12 @@ int main( int argc, char* args[] )
 		timeFrameLastCount = SDL_GetPerformanceCounter();
 		timeDeltaOperations = timeFrameLastCount - timeFrameStartCount;
 		// Timing: Transform operations delta into seconds view
-		float timeFrameSecondsOperations = timeDeltaOperations / (float) countFreq;
+		float timeFrameSecondsOperations = timeDeltaOperations / (float) perfFrequency;
 
 		// Debug Timing
 		if ( debug_timing ) {
-			printf("Frame: %02d OPERATIONS:\tcountFreq: %llu\ttimeFrameStartCount: %llu\ttimeDeltaOperations: %llu\ttimeFrameDuration: %llu\ttimeFrameSecondsOperations: %fs\tmsPerFrame:%fs\n",
-				frame, countFreq, timeFrameStartCount, timeDeltaOperations, timeFrameLastCount, timeFrameSecondsOperations, msPerFrame );
+			printf("Frame: %02d OPERATIONS:\tperfFrequency: %llu\ttimeFrameStartCount: %llu\ttimeDeltaOperations: %llu\ttimeFrameDuration: %llu\ttimeFrameSecondsOperations: %fs\tmsPerFrame:%fms\n",
+				frame, perfFrequency, timeFrameStartCount, timeDeltaOperations, timeFrameLastCount, timeFrameSecondsOperations, msPerFrame );
 		}
 		
 		
@@ -108,7 +121,7 @@ int main( int argc, char* args[] )
 				uint64_t timeFrameSleepCount = SDL_GetPerformanceCounter();
 				timeDeltaSleep = timeFrameSleepCount - timeFrameLastCount;
 				if ( debug_timing ) {
-					printf("SLEEP:\t\ttimeFrameSleep: %ds\ttimeDeltaSleep(real time spent on sleep): %llu\tTotal frame time: %llu\n",
+					printf("SLEEP:\t\ttimeFrameSleep: %dms\ttimeDeltaSleep(real time spent on sleep): %llu\tTotal frame time: %llu\n",
 						timeFrameSleep-2, timeDeltaSleep, timeDeltaOperations + timeDeltaSleep);
 				}
 			} else {
@@ -147,17 +160,20 @@ int main( int argc, char* args[] )
 			printf("Final frame time: %llu\n\n", timeFrameDuration);
 		}
 
-
 		// Update the timeFrameDuration with the timing of the last cycle
 		timeFrameDurationSum += timeFrameDuration;
 
+		// Increment frame counter
+		frame ++;
+
+		// Increment CPU Cycle
+		cycle++;
+
+		// Seconds Counter
+		timeSecondLast = SDL_GetPerformanceCounter();
 
 		// ------------------------------- P5: START OF SECONDs COUNTER  ------------------------------- //
-		// After the end of last frame
-		if ( frame == pal_freq ) {
-
-			// Print the debug message
-			// printf("\nFPS total time at %dhz: %llu\n", pal_freq , timeFrameDurationSum);
+		if ( timeSecondLast - timeSecondStart > 1000000000 ){ 
 
 			// Window Title Message update
 			char title_msg[80];
@@ -172,21 +188,25 @@ int main( int argc, char* args[] )
 			showFPS(frame);
 			font_update_msg2(renderer);
 
+			if ( debug_timing ) {
+				printf("\nSecond counter effective time: %llu\n\n", timeSecondLast - timeSecondStart);
+			}
+
 			// Reset counters
 			cycle = 0;
 			frame = 0;
 			timeFrameDurationSum = 0;
+			timeSecondStart = SDL_GetPerformanceCounter(); // Reset second counter
 		}
-
-		// Increment frame counter
-		frame ++;
-
-		// Increment CPU Cycle
-		cycle++;
 	}
 
 	//Free resources and close SDL
 	SDL_close();
+
+
+	free(string_msg1);
+	free(string_msg2);
+
 
 	return 0;
 }

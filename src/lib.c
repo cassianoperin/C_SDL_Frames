@@ -69,9 +69,12 @@ void showCPS( long long unsigned int number)
     char nstring[30];
 	int str_size, ptr, i , j = 0;
 
+	// Clear the array
+	string_msg1[0] = '\0';
+
 	// Allocate memory for the pointer
-	int length = snprintf( NULL, 0, "%llu", number );
-	string_msg1 = malloc( length + 30 );
+	// int length = snprintf( NULL, 0, "%llu", number );
+	// string_msg1 = malloc( length + 30 );
 
 	// Convert the integer into a string
     sprintf(nstring, "%llu", number);
@@ -118,7 +121,9 @@ void showCPS( long long unsigned int number)
 void showFPS( int number ) 
 {
 	int length = snprintf( NULL, 0, "%d", number );
-	string_msg2 = malloc( length + 10);
+
+	// Clear the array
+	string_msg2[0] = '\0';
 
 	char temp[20];
 	char fps_count[10];

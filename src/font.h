@@ -3,6 +3,8 @@
 #include <SDL2/SDL_ttf.h>
 #include "typedef.h"
 
+// char* reverse_string(const char* string)
+
 // --------------------------------- External Variables --------------------------------- //
 extern TTF_Font *font;
 extern SDL_Surface *text;
